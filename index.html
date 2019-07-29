@@ -1,36 +1,673 @@
-
-<!DOCTYPE html>
 <html>
-<head>
-	
-	<title>Updating Windows 10</title>
+	<head> 
+		<title></title>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+		<link rel="stylesheet" href="http://www.w3schools.com/lib/w3.css">
+		 <style type="text/css">
+		 	body {
+		 		float: center;
+		 	}
+		 	.title {
+		 		text-align: center;
+		 		display: inline-block;
+		 	}
+		 	.chart {
+		 		text-align: center;
+		 		display: inline-block;
+		 	}
+		 	.info {
+		 		text-align: center;
+		 		margin-right: 300px;
+		 		margin-left: 300px;
+		 	}
+		 	.tip {
+		 		text-align: center;
+		 		margin-right: 300px;
+		 		margin-left: 300px;
+		 		font-size: 11;
+		 		font-style: italic;
+		 		color: red;
 
-<style>
+		 	}
+		 	.tooltip {   
+				position: absolute;           
+				text-align: left;           
+				width: 80px;                  
+				height: 30px;                 
+				padding: 2px;             
+				font: 12px sans-serif;        
+				background: lightsteelblue;   
+				border: 0px;      
+				border-radius: 8px;           
+				pointer-events: none;         
+			}
+			.tooltip1 {  
+				position: absolute;           
+				text-align: left;           
+				width: 80px;                  
+				height: 50px;                 
+				padding: 2px;             
+				font: 12px sans-serif;        
+				background: lightsteelblue;   
+				border: 0px;      
+				border-radius: 8px;           
+				pointer-events: none;         
+			}				
+			.annotate {
+				stroke: gray;
+				stroke-width:3; 			
+			}
+			.anno {
+				margin-left: 20px;
+				margin-top: 20px;
+			}
+			#scene1 {
+				visibility: hidden;
+				margin-top: 10px;
+			}
+			#buttons {
+				visibility:hidden;
+			}
+			#next {
+				visibility: hidden;
+				margin-left:200px;
+			}
+			#previous {
+				visibility: hidden;
+				margin-right:300px;
+			}
+		 </style>	
+		 <script src='https://d3js.org/d3.v5.min.js'></script>
+	</head>
+	<body onload='init()'>
+		<div class="row">
+			<div class="col-md-12 title">
+				<h1>Titanic Survival: Who survived and why?</h1>
+				<p><b>The tragedy of the Titanic has been memorialized for decades.</b></p>
+				<p><b> Let's learn a bit more about the survivors...</b></p>
+			</div>
+		</div>\
+		<div class ="row">
+			<div class="col-md-12 chart" id="trigger">
+				<button onclick="getStarted()" id="start">Click Here To Start</button>
+			</div>
+			<div class="col-md-12 chart" id="buttons">
+				<button onclick="back()" id="previous">Previous</button>
+				<button onclick="next()" id="next">Next</button>
+			</div>
+			<div class="col-md-12 chart" id="scene1">
+				<p class="info" id="info">Scene 0 (Overview): Let's start with basics. The chart below outlines the age distribution of the survivors on the Titanic. Feel free to look at a few more details by hovering over a specific bar. Click the "Next" button when you're ready to move on.</p>
+				<p class="tip">Hover over the bars to see additional info</p>
+				<svg class="graph" width=800 height=500></svg>
+			</div>
+		</div>			
+		<script type="text/javascript">
+			function getStarted() {
+				window.scene = 1;
+				d3.select("#trigger").remove();
+				d3.select("#buttons").style("visibility", "visible");
+				d3.select("#scene1").style("visibility", "visible");
+				d3.select("#next").style("visibility", "visible");
+				d3.select("#previous").style("visibility", "hidden");	
+			}
+			function next() {
+				if(window.scene == 1) {
+					window.scene = 2;
+					colorScene2();
+					d3.select("#previous").style("visibility", "visible");		
+					d3.select("#next").style("visibility", "visible");			
+				}
+				else if(window.scene == 2) {
+					window.scene = 3;
+					colorScene3();
+					d3.select("#next").style("visibility", "hidden");	
+					d3.select("#previous").style("visibility", "visible");				
+				}
+			};
+			function back() {
+				if(window.scene == 2) {
+					window.scene = 1;
+					colorScene1();
+					d3.select("#next").style("visibility", "visible");
+					d3.select("#previous").style("visibility", "hidden");	
+				}
+				else if(window.scene == 3) {
+					window.scene = 2;
+					colorScene2();
+					d3.select("#previous").style("visibility", "visible");		
+					d3.select("#next").style("visibility", "visible");	
+				}
+			};
+			function colorScene1() {
+				init();
+				d3.select("svg").select("g").selectAll("line").remove();
+				d3.select("svg").select("g").selectAll("text").remove();
+				d3.select("#info").text(window.scene1Text);	
+			};
+			function colorScene2() {
+				d3.select("#info").text(window.scene2Text);
+				var recs = d3.select("svg").selectAll("g").selectAll("rect");
+				recs.style("opacity",function(d) {
+					if(d.age <18 || d.age >36) {
+						return .1;
+					}
+				})
+				.style("fill", "teal");
+				window.barColor2 = "teal";
+				// console.log(window.xStart, window.xEnd);
 
-body { 
-	background:#006dae;
-	-webkit-background-size: cover;
-	-moz-background-size: cover;
-	-o-background-size: cover;
-	background-size: cover;
-	vertical-align:middle; 
-	text-align:center;
-	z-index: -1;
-	margin:0;
-	padding:0;
-	font-family:Segoe UI Light, Segoe UI, Arial;
-	font-size:20px;
-}
+				d3.select("svg").select("g")
+				.append("line")
+				.attr("transform", "translate ("+margin+","+margin+")")
+				.attr("class", "annotate")
+				.style("opacity",.9)
+				.attr("x1", window.xStart-window.margin-10)
+				.attr("y1", 20)  
+				.attr("x2", window.xEnd-window.margin+15)
+				.attr("y2", 20);
+
+				d3.select("svg").select("g")
+				.append("text")
+				.attr("class", "anno")
+				.attr("x", window.xStart+85)
+				.attr("y", 60)  
+				.text("Ages 18-36");  
+			};
+			function colorScene3() {
+				scene3();
+				d3.select("#info").text(window.scene3Text);  
+			};
+		</script>
+		<script>
+		var scene = 0;
+		var barColor = "teal";
+
+		var scene1Text = 'Scene 1 (Overview): Lets start with basics. The chart below outlines the age distribution of the survivors on the Titanic. Feel free to look at a few more details by hovering over a specific bar. Click the "Next" button when youre ready to move on.';
+		var scene2Text = 'Scene 2 (Age): As you can clearly see, the ages of passengers that had the highest rate of survival were between the ages 18-36. This is the period in a humans life where they are at their physical peak. Click the "Next" button when youre ready to move on.';
+		var scene3Text = 'Scene 3 (Gender): Here you can see the distribution of genders per age. This coloring helps us make the clear determination that another signifigant factor when it comes to survival on the Titanic is gender. As you can see, women were saved at a much higher rate. Feel free to explore on your own, and use the button controls to go back. Thanks for learning!';
+
+		var xStart = 0;
+		var yStart = 0;
+		var xEnd = 0;
+		var yEnd = 0;
+
+		var margin = 50;
+		var width = 700;
+		var height = 400;
+
+		var maleCount = [];
+		var genderCount = [];
+		var femaleCount = [];
+		var tool = [];
+
+		async function init() {
+			window.tool = d3.select("body").append("div")   
+	    	.attr("class", "tooltip")              
+	    	.style("opacity", 0);
+ 
+			var data = await d3.csv("https://akdollin.github.io/Titanic/titanic.csv");
+
+  			// format the data
+  			data.forEach(function(d) {
+    			d.survived = +d.survived;
+  			});	
+
+			var temp = d3.nest()
+			.key(function(d) { return d.age;})
+			.rollup(function(d) { 
+			return d3.sum(d, function(g) {return g.survived; });
+			}).entries(data);
 
 
-</style>
+			temp.forEach(function(d) {
+				d.age = d.key;
+				d.survived = d.value;
+			});	
+			temp.sort(function(x, y){
+				return d3.ascending(x.age, y.age);
+			});
+			temp.shift();
 
-</head>
-<body>
+			window.femaleCount = d3.nest()
+			.key(function(d) { return d.age;})
+			.rollup(function(d) { 
+			return d3.sum(d, function(g) {
+				if(g.sex =="female") {
+					return g.survived; 
+				}
+			});
+			}).entries(data);
+			femaleCount.forEach(function(d) {
+				d.age = d.key;
+				d.survived = d.value;
+				d.y0 = d.survived;
+
+			});	
+			femaleCount.sort(function(x, y){
+				return d3.ascending(x.age, y.age);
+			});
+			femaleCount.shift();
+
+			// console.log(femaleCount);
+
+			window.genderCount = d3.nest()
+			.key(function(d) { return d.age;})
+			.rollup(function(d) { 
+			return [ 
+				["male",d3.sum(d, function(g) {
+					if(g.sex =="male") {
+						return g.survived; 
+					}
+			})],
+				["female",d3.sum(d, function(g) {
+					if(g.sex =="female") {
+						return g.survived; 
+					}
+			})]				
+				];
+
+			}).entries(data);
+
+			genderCount.forEach(function(d) {
+				d.age = +d.key;
+				d.survived = (d.value[0][1] + d.value[1][1]);
+				d.male = d.value[0][1];
+				d.female = d.value[1][1];
+			});	
+			genderCount.sort(function(x, y){
+				return d3.ascending(x.age, y.age);
+			});
+			genderCount.shift();
+			// console.log(temp);
+			// console.log(genderCount);
+
+			var x = d3.scaleBand().domain(window.genderCount.map(function(d) { return d.age;})).range([0,width]);
+			var y = d3.scaleLinear()
+			.domain([0, d3.max(window.genderCount, function(d) {return d.survived})])
+			.range([height,0]);
+			var colors = ["orange", "blue"];
 
 
-<a id="ref" data-translate="_win10workingonupdates">Working on updates:</a>&nbsp;<a id="timer">0%</a> <span data-translate="_win7percent">complete.</span><br /><span data-translate="_win10donotturnoff">Don't turn off your PC. This will take a while.</span>
+			window.maleCount = d3.nest()
+			.key(function(d) { return d.age;})
+			.rollup(function(d) { 
+			return d3.sum(d, function(g) {
+				if(g.sex =="male") {
+					return g.survived; 
+				}
+			});
+			}).entries(data);
+
+			maleCount.forEach(function(d) {
+				d.age = d.key;
+				d.survived = d.value;
+				d.y0 = d.survived;
+			});	
+
+			maleCount.sort(function(x, y){
+				return d3.ascending(x.age, y.age);
+			});
+
+			maleCount.shift();
+
+			// console.log(maleCount);
+
+			d3.select("svg")
+			.attr("width", width+2*margin)
+			.attr("height", height+2*margin)
+			.append("g")
+			// .style("fill", function(d, i) { return colors[i]; })
+			.attr("transform", "translate ("+margin+","+margin+")")
+			.selectAll(".bar")
+			.data(window.genderCount,function(d){return d;})
+			.enter()
+			.append("rect")
+			.attr("class", "bar")
+			.attr("x", function(d){
+				if (d.age == 18) {
+					xStart = x(d.age);
+				}
+				else if (d.age == 36) {
+					xEnd = x(d.age);
+				}
+				return x(d.age); })
+			.attr("width", x.bandwidth()-1)
+			.attr("y", function(d){
+				if (d.age == 18) {
+					yStart = y(d.survived);
+				}
+				else if (d.age == 36) {
+					yEnd = (d.survived);
+				}
+				return y(d.survived); })
+			.attr("height", function(d) {return  window.height - y(d.survived);})
+			.style("fill", window.barColor)
+			.on("mouseover", function(d,i) {    
+				d3.select(this).style("fill", "gray");
+				tool.transition()        
+				.duration(200)      
+				.style("opacity", .9);      
+				tool.html("Age: " +d.age + "<br/>"  + "Survived: " +d.survived + "<br/>")  
+				.style("left", (d3.event.pageX+8) + "px")     
+				.style("top", (d3.event.pageY - 25) + "px");    
+			})                  
+			.on("mouseout", function(d,i) {
+				d3.select(this).style("fill", window.barColor);
+				tool.transition()        
+				.duration(500)      
+				.style("opacity", 0);   
+			});
+
+			d3.select("svg")
+			.append("g")
+			.attr("transform", "translate ("+margin+","+(margin+height)+")")
+			.call(d3.axisBottom(x)
+				.tickValues([0,10,20,30,40,50,60,70,80])
+				.tickFormat(d3.format("~s"))
+			);
 
 
-</body>
+			d3.select("svg")
+			.append("g")
+			.attr("transform", "translate ("+margin+","+margin+")")
+			.call(d3.axisLeft(y)
+				.tickValues([0,10,20,30])
+				.tickFormat(d3.format("~s"))
+			);
+
+			d3.select("svg")
+			.append("text") 
+			.attr("class", "label")            
+			.attr("transform","translate(" + ((window.width/2)+window.margin)+ " ," + (window.height + 80) + ")")
+			.style("text-anchor", "middle")
+			.text("Age");
+
+			d3.select("svg")
+			.append("text")
+			.attr("class", "label")            
+			.attr("transform", "rotate(-90)")
+			.attr("y", window.margin/6)
+			.attr("x",0 - window.height/2 - window.margin)
+			.attr("dy", "1em")
+			.style("text-anchor", "middle")
+			.text("Sum of survivors");  
+
+		}
+		</script>
+		<script>
+			var scene = 0;
+			var barColor = "teal";
+			var barColor2 = "orange";
+
+			var scene1Text = 'Scene 1 (Overview): Lets start with basics. The chart below outlines the age distribution of the survivors on the Titanic. Feel free to look at a few more details by hovering over a specific bar. Click the "Next" button when youre ready to move on.';
+			var scene2Text = 'Scene 2 (Age): As you can clearly see, the ages of passengers that had the highest rate of survival were between the ages 18-36. This is the period in a humans life where they are at their physical peak. Click the "Next" button when youre ready to move on.';
+			var scene3Text = 'Scene 3 (Gender): Here you can see the distribution of genders per age. This coloring helps us make the clear determination that another signifigant factor when it comes to survival on the Titanic is gender. As you can see, women were saved at a much higher rate. Feel free to explore on your own, and use the button controls to go back. Thanks for learning!';
+
+			var xStart = 0;
+			var yStart = 0;
+			var xEnd = 0;
+			var yEnd = 0;
+
+			var margin = 50;
+			var width = 700;
+			var height = 400;
+
+			var maleCount = [];
+			var genderCount = [];
+			var femaleCount = [];
+
+			async function scene3() {
+				window.barColor2 = "orange";
+				var tool = d3.select("body").append("div")   
+		    	.attr("class", "tooltip1")              
+		    	.style("opacity", 0);
+	 
+				var data = await d3.csv("https://akdollin.github.io/Titanic/titanic.csv");
+
+	  			// format the data
+	  			data.forEach(function(d) {
+	    			d.survived = +d.survived;
+	  			});	
+
+				var temp = d3.nest()
+				.key(function(d) { return d.age;})
+				.rollup(function(d) { 
+				return d3.sum(d, function(g) {return g.survived; });
+				}).entries(data);
+
+
+				temp.forEach(function(d) {
+					d.age = d.key;
+					d.survived = d.value;
+				});	
+				temp.sort(function(x, y){
+					return d3.ascending(x.age, y.age);
+				});
+				temp.shift();
+
+
+
+
+				window.femaleCount = d3.nest()
+				.key(function(d) { return d.age;})
+				.rollup(function(d) { 
+				return d3.sum(d, function(g) {
+					if(g.sex =="female") {
+						return g.survived; 
+					}
+				});
+				}).entries(data);
+				femaleCount.forEach(function(d) {
+					d.age = d.key;
+					d.survived = d.value;
+					d.y0 = d.survived;
+
+				});	
+				femaleCount.sort(function(x, y){
+					return d3.ascending(x.age, y.age);
+				});
+				femaleCount.shift();
+
+				// console.log(femaleCount);
+
+				window.genderCount = d3.nest()
+				.key(function(d) { return d.age;})
+				.rollup(function(d) { 
+				return [ 
+					["male",d3.sum(d, function(g) {
+						if(g.sex =="male") {
+							return g.survived; 
+						}
+				})],
+					["female",d3.sum(d, function(g) {
+						if(g.sex =="female") {
+							return g.survived; 
+						}
+				})]				
+					];
+
+				}).entries(data);
+
+				genderCount.forEach(function(d) {
+					d.age = +d.key;
+					d.survived = (d.value[0][1] + d.value[1][1]);
+					d.male = d.value[0][1];
+					d.female = d.value[1][1];
+				});	
+				genderCount.sort(function(x, y){
+					return d3.ascending(x.age, y.age);
+				});
+				genderCount.shift();
+				// console.log(temp);
+				// console.log(genderCount);
+
+				var x = d3.scaleBand().domain(window.genderCount.map(function(d) { return d.age;})).range([0,width]);
+				var y = d3.scaleLinear()
+				.domain([0, d3.max(window.genderCount, function(d) {return d.survived})])
+				.range([height,0]);
+
+
+				window.maleCount = d3.nest()
+				.key(function(d) { return d.age;})
+				.rollup(function(d) { 
+				return d3.sum(d, function(g) {
+					if(g.sex =="male") {
+						return g.survived; 
+					}
+				});
+				}).entries(data);
+
+				maleCount.forEach(function(d) {
+					d.age = d.key;
+					d.survived = d.value;
+					d.y0 = d.survived;
+				});	
+
+				maleCount.sort(function(x, y){
+					return d3.ascending(x.age, y.age);
+				});
+
+				maleCount.shift();
+
+				// console.log(maleCount);
+
+
+				d3.select("svg")
+				.attr("width", width+2*margin)
+				.attr("height", height+2*margin)
+				.append("g")
+				// .style("fill", function(d, i) { return colors[i]; })
+				.attr("transform", "translate ("+margin+","+margin+")")
+				.selectAll(".bar")
+				.data(window.femaleCount,function(d){return d;})
+				.enter()
+				.append("rect")
+				.attr("class", "bar")
+				.attr("x", function(d){
+					if (d.age == 18) {
+						xStart = x(d.age);
+					}
+					else if (d.age == 36) {
+						xEnd = x(d.age);
+					}
+					return x(d.age); })
+				.attr("width", x.bandwidth()-1)
+				.attr("y", function(d){
+					if (d.age == 18) {
+						yStart = y(d.survived);
+					}
+					else if (d.age == 36) {
+						yEnd = (d.survived);
+					}
+					return y(d.survived); })
+				.attr("height", function(d) {return  window.height - y(d.survived);})
+				.style("fill", window.barColor)
+				.on("mouseover", function(d,i) {    
+					d3.select(this).style("fill", "gray");
+					tool.transition()        
+					.duration(200)      
+					.style("opacity", .9);      
+					tool.html("Age: " +d.age + "<br/>"  + "Survived: " +d.survived + "<br/>" + "Sex: Female")  
+					.style("left", (d3.event.pageX+8) + "px")     
+					.style("top", (d3.event.pageY - 25) + "px");    
+				})                  
+				.on("mouseout", function(d,i) {
+					d3.select(this).style("fill", window.barColor);
+					tool.transition()        
+					.duration(500)      
+					.style("opacity", 0);   
+				});
+
+				d3.select("svg")
+				.attr("width", width+2*margin)
+				.attr("height", height+2*margin)
+				.append("g")
+				// .style("fill", function(d, i) { return colors[i]; })
+				.attr("transform", "translate ("+margin+","+margin+")")
+				.selectAll(".bar")
+				.data(maleCount)
+				.enter()
+				.append("rect")
+				.attr("class", "bar")
+				.attr("x", function(d,i){
+					if (d.age == 18) {
+						xStart = x(d.age);
+					}
+					else if (d.age == 36) {
+						xEnd = x(d.age);
+					}
+					return x(d.age); })
+				.attr("width", x.bandwidth()-1)
+				.attr("y", function(d,i){
+					if (d.age == 18) {
+						yStart = y(d.survived);
+					}
+					else if (d.age == 36) {
+						yEnd = (d.survived);
+					}
+					return y(d.survived+window.femaleCount[i].y0); })
+				.attr("height", function(d) {return  window.height - y(d.survived);})
+				.style("fill", window.barColor2)
+				.on("mouseover", function(d,i) {    
+					d3.select(this).style("fill", "gray");
+					tool.transition()        
+					.duration(200)      
+					.style("opacity", .9);      
+					tool.html("Age: " +d.age + "<br/>"  + "Survived: " +d.survived + "<br/>" + "Sex: Male")  				
+					.style("left", (d3.event.pageX+8) + "px")     
+					.style("top", (d3.event.pageY - 25) + "px");    
+				})                  
+				.on("mouseout", function(d,i) {
+					d3.select(this).style("fill", window.barColor2);
+					tool.transition()        
+					.duration(500)      
+					.style("opacity", 0);   
+				});
+
+				console.log(maleCount);
+				console.log(window.maleCount[0].y0);
+				var recs = d3.select("svg").selectAll("g").selectAll("rect");
+
+				recs.style("opacity",function(d) {
+					if(d.age <18 || d.age >36) {
+						return .1;
+					}
+				});
+
+				d3.select("svg")
+				.append("g")
+				.attr("transform", "translate ("+margin+","+(margin+height)+")")
+				.call(d3.axisBottom(x)
+					.tickValues([0,10,20,30,40,50,60,70,80])
+					.tickFormat(d3.format("~s"))
+				);
+
+
+				d3.select("svg")
+				.append("g")
+				.attr("transform", "translate ("+margin+","+margin+")")
+				.call(d3.axisLeft(y)
+					.tickValues([0,10,20,30])
+					.tickFormat(d3.format("~s"))
+				);
+
+				d3.select("svg")
+				.append("text") 
+				.attr("class", "label")            
+				.attr("transform","translate(" + ((window.width/2)+window.margin)+ " ," + (window.height + 80) + ")")
+				.style("text-anchor", "middle")
+				.text("Age");
+
+				d3.select("svg")
+				.append("text")
+				.attr("class", "label")            
+				.attr("transform", "rotate(-90)")
+				.attr("y", window.margin/6)
+				.attr("x",0 - window.height/2 - window.margin)
+				.attr("dy", "1em")
+				.style("text-anchor", "middle")
+				.text("Sum of survivors");  
+			}
+		</script>
+	</body>
 </html>
